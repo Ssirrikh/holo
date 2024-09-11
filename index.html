@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset = utf-8>
+	<title>HoloViz Display Alignment</title>
+	<style>
+        :root {
+            --color-primary: #11ff22;
+            --color-glow: #00bb00;
+            --color-highlight: #eeffef;
+            --color-background : #000000;
+
+            --opacity-minor: 0.2;
+            --opacity-subminor: 0.1;
+
+            --v-avg: calc((1vmin + 1vmax) / 2);
+        }
+
+		* {
+			margin: 0px;
+			padding: 0px;
+			box-sizing: border-box;
+			font-family: 'Calibri';
+		}
+
+		body {
+			color: var(--color-primary);
+			background-color: var(--color-background);
+			overflow: hidden;
+		}
+        div {
+            display: block;
+        }
+
+        .flex-row {}
+        .flex-col {}
+        .flex-adaptive {}
+
+        .hidden {
+            visibility: hidden;
+        }
+
+        .dot-grid-css {
+            background-image: radial-gradient(var(--color-primary) max(5%,0.7px), transparent 0);
+            background-size: max(1.5vmax,20px) max(1.5vmax,20px);
+            background-position: center center;
+            display: inline-block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: var(--opacity-minor);
+        }
+        .content-wrapper {
+            color: var(--color-primary);
+            background-color: transparent;
+            border: 1px solid var(--color-primary);
+            display: inline-block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .axis-h {
+            background-color: var(--color-primary);
+            display: inline-block;
+            position: absolute;
+            width: 100%;
+            height: 1px;
+        }
+        .axis-v {
+            background-color: var(--color-primary);
+            display: inline-block;
+            position: absolute;
+            width: 1px;
+            height: 100%;
+        }
+        .anchor {
+            background-color: var(--color-primary);
+            display: inline-block;
+            position: absolute;
+            transform: translate(-50%,-50%) rotate(45deg);
+            width: 1.5vmax;
+            height: 1.5vmax;
+        }
+
+	</style>
+</head>
+<body>
+
+<div class='content-wrapper'>
+    <div class='dot-grid-css'></div>
+
+    <!-- major axes -->
+    <div class='axis-h' style='top:50%;'></div>
+    <div class='axis-v' style='left:50%;'></div>
+    <!-- minor axes -->
+    <div class='axis-h' style='top:25%; opacity:var(--opacity-minor);'></div>
+    <div class='axis-h' style='top:75%; opacity:var(--opacity-minor);'></div>
+    <div class='axis-v' style='left:25%; opacity:var(--opacity-minor);'></div>
+    <div class='axis-v' style='left:75%; opacity:var(--opacity-minor);'></div>
+    <!-- sub minor axes -->
+    <div class='axis-h' style='top:12.5%; opacity:var(--opacity-subminor);'></div>
+    <div class='axis-h' style='top:37.5%; opacity:var(--opacity-subminor);'></div>
+    <div class='axis-h' style='top:62.5%; opacity:var(--opacity-subminor);'></div>
+    <div class='axis-h' style='top:87.5%; opacity:var(--opacity-subminor);'></div>
+    <div class='axis-v' style='left:12.5%; opacity:var(--opacity-subminor);'></div>
+    <div class='axis-v' style='left:37.5%; opacity:var(--opacity-subminor);'></div>
+    <div class='axis-v' style='left:62.5%; opacity:var(--opacity-subminor);'></div>
+    <div class='axis-v' style='left:87.5%; opacity:var(--opacity-subminor);'></div>
+
+    <!-- origin anchor -->
+    <!-- <div class='anchor' style='top:50%; left:50%;'></div> -->
+    <!-- quadrant anchors -->
+    <!-- <div class='anchor' style='top:25%; left:25%;'></div>
+    <div class='anchor' style='top:25%; left:75%;'></div>
+    <div class='anchor' style='top:75%; left:25%;'></div>
+    <div class='anchor' style='top:75%; left:75%;'></div> -->
+    <!-- axis anchors -->
+    <!-- <div class='anchor' style='top:0%; left:50%;'></div>
+    <div class='anchor' style='top:50%; left: 0%;'></div>
+    <div class='anchor' style='top:50%; left:100%;'></div>
+    <div class='anchor' style='top:100%; left:50%;'></div> -->
+    <!-- corner anchors -->
+    <div class='anchor' style='top:0%; left: 0%;'></div>
+    <div class='anchor' style='top:0%; left:100%;'></div>
+    <div class='anchor' style='top:100%; left: 0%;'></div>
+    <div class='anchor' style='top:100%; left:100%;'></div>
+</div>
+
+<script type="text/javascript" src="script/log.js"></script>
+
+<script type="text/javascript">
+
+	//// SETTINGS AND CONSTANTS ////
+
+    // CSS
+    const CSSVars = {
+        get : (k) => getComputedStyle(document.documentElement).getPropertyValue(k),
+        set : (k,v) => document.documentElement.style.setProperty(k,v)
+    };
+
+    // DOM
+        //
+
+    // display settings
+    let display = {
+        width : window.innerWidth,
+        height : window.innerHeight,
+        cx0 : window.innerWidth / 2,
+        cy0 : window.innerHeight / 2,
+        isFullscreen : false,
+        update : () => {
+            display.width = window.innerWidth,
+            display.height = window.innerHeight,
+            display.cx0 = window.innerWidth / 2,
+            display.cy0 = window.innerHeight / 2
+        }
+    };
+    let mouse = {
+        MAX_RADIUS : 0.7 * display.cy0,
+        x : window.innerWidth / 2,
+        y : window.innerHeight / 2,
+        cartesianX : 0,
+        cartesianY : 0,
+        getAngle : () => {
+            const dx = mouse.cartesianX - display.cx0;
+            const dy = mouse.cartesianY - display.cy0;
+            return Math.atan(dy/dx);
+        },
+        getP : () => {
+            const dist = Math.sqrt(mouse.cartesianX*mouse.cartesianX + mouse.cartesianY*mouse.cartesianY);
+            return Math.min(dist,mouse.MAX_RADIUS) / mouse.MAX_RADIUS;
+        },
+        update : (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.cartesianX = e.clientX - display.cx0;
+            mouse.cartesianY = display.cy0 - e.clientY;
+        }
+    };
+
+
+
+	//// INIT ////
+
+    //
+
+
+
+	//// ANIMATION ////
+
+	function animate () {
+
+		requestAnimationFrame(animate);
+        const t0_frame = performance.now();
+
+        //
+
+        // console
+        const mspt = (performance.now()-t0_frame).toFixed(0);
+        const mfps = (1000 / mspt).toFixed(0);
+        log.clear();
+        log.addLine(`MSPT: ${mspt}`);
+        log.addLine(`mFPS: ${mfps}`);
+        log.addLine(` res: ${display.width}x${display.height}`);
+        log.addLine('');
+        log.addLine('[`] to toggle debug info');
+        log.addLine('[f] to toggle fullscreen');
+        log.updateElem();
+
+	}
+
+	animate();
+
+
+
+    //// UPDATE AND CONTROLS ////
+
+    function onResize () {
+        display.update();
+    }
+    function onMouse (e) {
+        mouse.update(e);
+    }
+
+    // init
+    onResize();
+    window.addEventListener(   'resize', onResize);
+    window.addEventListener('mousemove', onMouse );
+
+    // keybinds
+	window.addEventListener('keydown', e => {
+		// console.log(e.key);
+		switch (e.key) {
+		// fullscreen
+		case 'f':
+            if (display.isFullscreen && document.fullscreenElement) {
+                document.exitFullscreen();
+                display.isFullscreen = false;
+            } else if (!display.isFullscreen && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                display.isFullscreen = true;
+            }
+			break;
+		// debug log/controls
+		case '`':
+            log.elem.style.visibility = (log.elem.style.visibility == 'hidden') ? 'visible' : 'hidden';
+			break;
+        }
+	});
+    window.addEventListener('keyup', e => {
+		console.log(e.key);
+		switch (e.key) {
+		//
+        }
+	});
+
+
+
+</script>
+
+</body>
+</html>
