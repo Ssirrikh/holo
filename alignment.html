@@ -27,10 +27,19 @@
 		body {
 			color: var(--color-primary);
 			background-color: var(--color-background);
+            position: fixed; /* disables scrolling so offscreen elements don't force body wider than 100vw */
+			width: 100vw;
+			height: 100vh;
 			overflow: hidden;
 		}
         div {
             display: block;
+        }
+        button { /* unstyle buttons */
+            color: var(--color-primary);
+            background-color: transparent;
+            border: none;
+            outline: none;
         }
 
         .flex-row {}
@@ -39,12 +48,6 @@
 
         .hidden {
             visibility: hidden;
-        }
-        .unstyle-button {
-            color: var(--color-primary);
-            background-color: transparent;
-            border: none;
-            outline: none;
         }
 
         .dot-grid-css {
@@ -184,7 +187,7 @@
 <div id='settings-modal' class='settings-modal-overlay' style='visibility:hidden;'>
     <!-- settings elements go here -->
 </div>
-<button class='unstyle-button settings-button' onclick='toggleShowSettings()'>
+<button class='settings-button' onclick='toggleShowSettings()'>
     <div id='settings-button-icon' class='icon-hamburger-menu'></div>
 </button>
 
