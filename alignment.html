@@ -14,6 +14,7 @@
             --opacity-subminor: 0.1;
 
             --v-avg: calc((1vmin + 1vmax) / 2);
+            --square-button-width: max(2vmax,1.5rem);
         }
 
 		* {
@@ -39,6 +40,12 @@
         .hidden {
             visibility: hidden;
         }
+        .unstyle-button {
+            color: var(--color-primary);
+            background-color: transparent;
+            border: none;
+            outline: none;
+        }
 
         .dot-grid-css {
             background-image: radial-gradient(var(--color-primary) max(5%,0.7px), transparent 0);
@@ -50,14 +57,19 @@
             height: 100%;
             opacity: var(--opacity-minor);
         }
-        .content-wrapper {
+        .content-wrapper, .settings-modal-overlay, .settings-wrapper {
             color: var(--color-primary);
             background-color: transparent;
-            border: 1px solid var(--color-primary);
             display: inline-block;
             position: absolute;
             width: 100%;
             height: 100%;
+        }
+        .content-wrapper {
+            border: 1px solid var(--color-primary);
+        }
+        .settings-modal-overlay {
+            background-color: #000000bb;
         }
 
         .axis-h {
@@ -81,6 +93,49 @@
             transform: translate(-50%,-50%) rotate(45deg);
             width: 1.5vmax;
             height: 1.5vmax;
+        }
+
+        .settings-button {
+            cursor: pointer;
+            /* border: 1px solid var(--color-primary); */
+            display: inline-block;
+            position: absolute;
+            top: var(--square-button-width);
+            right: var(--square-button-width);
+            width: var(--square-button-width);
+            height: var(--square-button-width);
+        }
+        .icon-hamburger-menu, .icon-hamburger-menu::before, .icon-hamburger-menu::after {
+            background-color: var(--color-primary);
+            display: block;
+            position: absolute;
+            width: var(--square-button-width);
+            height: calc(var(--square-button-width) / 2 / 5);
+        }
+        .icon-hamburger-menu {
+            transform: translate(0,-50%);
+        }
+        .icon-hamburger-menu::before {
+            content: '';
+            margin-top: calc(var(--square-button-width) * -2 / 5);
+        }
+        .icon-hamburger-menu::after {
+            content: '';
+            margin-top: calc(var(--square-button-width) * 2 / 5);
+        }
+        .icon-close, .icon-close::after {
+            background-color: var(--color-primary);
+            display: block;
+            position: absolute;
+            width: calc(var(--square-button-width) * 1.414); /* diagonal is hypotenuse of 45-45-90 triangle => sqrt(2) ~= 1.414 */
+            height: calc(var(--square-button-width) / 2 / 5);
+        }
+        .icon-close {
+            transform: translate(calc(var(--square-button-width) * -0.414 / 2),-50%) rotate(45deg); /* center element by translating by hypotenuse - leg = sqrt(2) - 1 = 0.414 */
+        }
+        .icon-close::after {
+            content: '';
+            transform: rotate(90deg); /* rotates relative to source(?) element (what's even the terminology here?) */
         }
 
 	</style>
@@ -126,6 +181,12 @@
     <div class='anchor' style='top:100%; left: 0%;'></div>
     <div class='anchor' style='top:100%; left:100%;'></div>
 </div>
+<div id='settings-modal' class='settings-modal-overlay' style='visibility:hidden;'>
+    <!-- settings elements go here -->
+</div>
+<button class='unstyle-button settings-button' onclick='toggleShowSettings()'>
+    <div id='settings-button-icon' class='icon-hamburger-menu'></div>
+</button>
 
 <script type="text/javascript" src="script/log.js"></script>
 
@@ -140,7 +201,8 @@
     };
 
     // DOM
-        //
+    const settingsButton = document.getElementById('settings-button-icon');
+    const settingsModal = document.getElementById('settings-modal');
 
     // display settings
     let display = {
@@ -183,7 +245,19 @@
 
 	//// INIT ////
 
-    //
+    let settingsVisible = false;
+    function toggleShowSettings () {
+        settingsVisible = !settingsVisible;
+        if (settingsVisible) {
+            settingsButton.classList.remove('icon-hamburger-menu');
+            settingsButton.classList.add('icon-close');
+            settingsModal.style.visibility = 'visible';
+        } else {
+            settingsButton.classList.remove('icon-close');
+            settingsButton.classList.add('icon-hamburger-menu');
+            settingsModal.style.visibility = 'hidden';
+        }
+    }
 
 
 
@@ -204,8 +278,10 @@
         log.addLine(`mFPS: ${mfps}`);
         log.addLine(` res: ${display.width}x${display.height}`);
         log.addLine('');
-        log.addLine('[`] to toggle debug info');
-        log.addLine('[f] to toggle fullscreen');
+        log.addLine('[`] to show/hide debug info');
+        log.addLine(`[f] to toggle fullscreen`);
+        log.addLine('');
+        log.addLine(`[m] to show/hide HoloViz settings menu (${settingsVisible?'ON':'OFF'})`);
         log.updateElem();
 
 	}
@@ -242,6 +318,8 @@
                 display.isFullscreen = true;
             }
 			break;
+        // user controls
+        case 'm': toggleShowSettings(); break;
 		// debug log/controls
 		case '`':
             log.elem.style.visibility = (log.elem.style.visibility == 'hidden') ? 'visible' : 'hidden';
