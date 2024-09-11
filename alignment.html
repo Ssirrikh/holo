@@ -27,7 +27,7 @@
 		body {
 			color: var(--color-primary);
 			background-color: var(--color-background);
-            position: fixed; /* disables scrolling so offscreen elements don't force body wider than 100vw */
+            position: relative; /* disables scrolling so offscreen elements don't force body wider than 100vw on mobile */
 			width: 100vw;
 			height: 100vh;
 			overflow: hidden;
@@ -141,6 +141,28 @@
             transform: rotate(90deg); /* rotates relative to source(?) element (what's even the terminology here?) */
         }
 
+        .corner-brackets {
+            --c: var(--color-primary); /* border color */
+            --s: 0.5vmax; /* side-length of bracket */
+            --t: 2px;  /* thickness/line-width of border */
+            --g: 2px; /* gap between border and content; replaces padding */
+
+            padding: calc(var(--g) + var(--t));
+            outline: var(--t) solid var(--c);
+            outline-offset: calc(-1*var(--t));
+            mask: conic-gradient(at var(--s) var(--s),#0000 75%,#000 0) 0 0/calc(100% - var(--s)) calc(100% - var(--s)),
+                linear-gradient(#000 0 0) content-box;
+            transition: .4s;
+            cursor: pointer;
+
+            /* background-color: #ff000044; */
+            position: absolute;
+            bottom: 2vw;
+            right: 2vw;
+            width: var(--square-button-width);
+            height: var(--square-button-width);
+        }
+
 	</style>
 </head>
 <body>
@@ -187,9 +209,11 @@
 <div id='settings-modal' class='settings-modal-overlay' style='visibility:hidden;'>
     <!-- settings elements go here -->
 </div>
-<button class='settings-button' onclick='toggleShowSettings()'>
+<!-- <div class='flex-row '></div> -->
+<button class='settings-button' onclick='toggleShowSettings()' title='Show HoloViz settings'>
     <div id='settings-button-icon' class='icon-hamburger-menu'></div>
 </button>
+<div class='corner-brackets' onclick='toggleFullscreen()' title='Fullscreen'></div>
 
 <script type="text/javascript" src="script/log.js"></script>
 
@@ -247,6 +271,16 @@
 
 
 	//// INIT ////
+
+    function toggleFullscreen () {
+        if (display.isFullscreen && document.fullscreenElement) {
+            document.exitFullscreen();
+            display.isFullscreen = false;
+        } else if (!display.isFullscreen && !document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            display.isFullscreen = true;
+        }
+    }
 
     let settingsVisible = false;
     function toggleShowSettings () {
@@ -311,17 +345,8 @@
 	window.addEventListener('keydown', e => {
 		// console.log(e.key);
 		switch (e.key) {
-		// fullscreen
-		case 'f':
-            if (display.isFullscreen && document.fullscreenElement) {
-                document.exitFullscreen();
-                display.isFullscreen = false;
-            } else if (!display.isFullscreen && !document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-                display.isFullscreen = true;
-            }
-			break;
-        // user controls
+		// user controls
+		case 'f': toggleFullscreen(); break;
         case 'm': toggleShowSettings(); break;
 		// debug log/controls
 		case '`':
