@@ -209,7 +209,6 @@
 <div id='settings-modal' class='settings-modal-overlay' style='visibility:hidden;'>
     <!-- settings elements go here -->
 </div>
-<!-- <div class='flex-row '></div> -->
 <button class='settings-button' onclick='toggleShowSettings()' title='Show HoloViz settings'>
     <div id='settings-button-icon' class='icon-hamburger-menu'></div>
 </button>
@@ -238,6 +237,8 @@
         cx0 : window.innerWidth / 2,
         cy0 : window.innerHeight / 2,
         isFullscreen : false,
+        mirrorH : false,
+        mirrorV : false,
         update : () => {
             display.width = window.innerWidth,
             display.height = window.innerHeight,
@@ -272,6 +273,19 @@
 
 	//// INIT ////
 
+    function toggleMirrorH () {
+        display.mirrorH = !display.mirrorH;
+        const scaleX = (display.mirrorH) ? -1 : 1;
+        const scaleY = (display.mirrorV) ? -1 : 1;
+        document.body.style.transform = `scale(${scaleX},${scaleY})`;
+    }
+    function toggleMirrorV () {
+        display.mirrorV = !display.mirrorV;
+        const scaleX = (display.mirrorH) ? -1 : 1;
+        const scaleY = (display.mirrorV) ? -1 : 1;
+        document.body.style.transform = `scale(${scaleX},${scaleY})`;
+    }
+
     function toggleFullscreen () {
         if (display.isFullscreen && document.fullscreenElement) {
             document.exitFullscreen();
@@ -296,6 +310,8 @@
         }
     }
 
+    
+
 
 
 	//// ANIMATION ////
@@ -319,6 +335,15 @@
         log.addLine(`[f] to toggle fullscreen`);
         log.addLine('');
         log.addLine(`[m] to show/hide HoloViz settings menu (${settingsVisible?'ON':'OFF'})`);
+        log.addLine('');
+        log.addLine(`Mirroring requirements depend on your projector.`);
+        log.addLine(`The following guidelines assume a projector with the same orientation as the user:`);
+        log.addLine('  - Systems with direct projection or an even number of mirrors require vertical mirroring.');
+        log.addLine('  - Systems with an even number of mirrors do not require vertical mirroring.');
+        log.addLine('  - No horizontal mirroring required.');
+        log.addLine('');
+        log.addLine(`[h] to toggle horizontal mirroring (${display.mirrorH?'ON':'OFF'})`);
+        log.addLine(`[v] to toggle vertical mirroring (${display.mirrorV?'ON':'OFF'})`);
         log.updateElem();
 
 	}
@@ -348,6 +373,8 @@
 		// user controls
 		case 'f': toggleFullscreen(); break;
         case 'm': toggleShowSettings(); break;
+        case 'h': toggleMirrorH(); break;
+        case 'v': toggleMirrorV(); break;
 		// debug log/controls
 		case '`':
             log.elem.style.visibility = (log.elem.style.visibility == 'hidden') ? 'visible' : 'hidden';
