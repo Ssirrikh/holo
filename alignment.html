@@ -35,15 +35,31 @@
         div {
             display: block;
         }
-        button { /* unstyle buttons */
-            color: var(--color-primary);
+        button {
+            /* unstyle buttons */
             background-color: transparent;
             border: none;
             outline: none;
+
+            /* default square button for touchscreens */
+            cursor: pointer;
+            color: var(--color-primary);
+            /* border: 1px solid var(--color-primary); */
+            /* background-color: #ff000044; */
+            display: inline-block;
+            position: absolute;
+            width: var(--square-button-width);
+            height: var(--square-button-width);
         }
 
-        .flex-row {}
-        .flex-col {}
+        .flex-row {
+            display: flex;
+            flex-direction: row;
+        }
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+        }
         .flex-adaptive {}
 
         .hidden {
@@ -73,6 +89,15 @@
         }
         .settings-modal-overlay {
             background-color: #000000bb;
+        }
+        #settings-modal {
+            border: 1px solid var(--color-primary);
+            position: absolute;
+            width: 50vw;
+            height: 30vw;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
         }
 
         .axis-h {
@@ -134,11 +159,45 @@
             height: calc(var(--square-button-width) / 2 / 5);
         }
         .icon-close {
-            transform: translate(calc(var(--square-button-width) * -0.414 / 2),-50%) rotate(45deg); /* center element by translating by hypotenuse - leg = sqrt(2) - 1 = 0.414 */
+            transform: translate(calc(var(--square-button-width) * -0.414 / 2),-50%) rotate(45deg); /* centering element => translate by (hypotenuse - leg) = sqrt(2) - 1 = 0.414 */
         }
         .icon-close::after {
             content: '';
             transform: rotate(90deg); /* rotates relative to source(?) element (what's even the terminology here?) */
+        }
+
+        .arrow-left-right {
+            --t: 2px; /* line thickness */
+
+            background-color: var(--color-primary);
+            display: block;
+            position: absolute;
+            width: var(--square-button-width);
+            height: 2px;
+        }
+        .arrow-left-right::before, .arrow-left-right::after {
+            --s: calc(var(--square-button-width) / 2); /* side-length of arrowhead */
+
+            content: '';
+            border: var(--t) solid var(--color-primary);
+            display: inline-block;
+            width: var(--s);
+            height: var(--s);
+        }
+        .arrow-left-right::before {
+            border-top: none;
+            border-right: none;
+            transform: translate(-50%,-50%) rotate(45deg);
+        }
+        .arrow-left-right::after {
+            border-bottom: none;
+            border-left: none;
+            transform: translate(50%,-50%) rotate(45deg);
+        }
+
+        .button-mirror-h {
+            bottom: 2vw;
+            right: 8vw;
         }
 
         .corner-brackets {
@@ -162,6 +221,45 @@
             width: var(--square-button-width);
             height: var(--square-button-width);
         }
+
+        #hue-wheel {
+            --w: 10vw; /* width/diameter of element */
+            --g: 7.5vw; /* diameter of central gap */
+
+            background: conic-gradient(red, magenta, blue, aqua, lime, yellow, red);
+            mask: radial-gradient(transparent calc(var(--g) / 2), #000 calc(var(--g) / 2 + 1px),#000 calc(var(--w) / 2)); /* width-1px color stop for anti-aliasing */
+            border-radius: 50%;
+            display: inline-block;
+            position: absolute;
+            width: var(--w);
+            height: var(--w);
+
+            bottom: 2vw;
+            left: 2vw;
+        }
+        /* #hue-wheel:after {
+            --w: 10vw;
+            --g: 7.5vw;
+
+            background: conic-gradient(red, magenta, blue, aqua, lime, yellow, red);
+            mask: radial-gradient(transparent calc(var(--g) / 2), #000 calc(var(--g) / 2 + 1px),#000 calc(var(--w) / 2));
+            border-radius: 50%;
+            width: var(--w);
+            height: var(--w);
+        } */
+        /* #hue-slider {
+            --w: 3vw;
+
+            background-color: var(--color-primary);
+            outline: 1px solid black;
+            border: 1px solid white;
+            border-radius: 50%;
+            display: inline-block;
+            position: absolute;
+            width: var(--w);
+            height: var(--w);
+
+        } */
 
 	</style>
 </head>
@@ -206,8 +304,16 @@
     <div class='anchor' style='top:100%; left: 0%;'></div>
     <div class='anchor' style='top:100%; left:100%;'></div>
 </div>
-<div id='settings-modal' class='settings-modal-overlay' style='visibility:hidden;'>
-    <!-- settings elements go here -->
+<div id='settings-modal-wrapper' class='settings-modal-overlay' style='visibility:hidden;'>
+    <div id='settings-modal'>
+        <!-- <button class='button-mirror-h' title='Toggle horizontal mirroring'>
+            <div class='arrow-left-right'></div>
+        </button> -->
+    </div>
+    
+    <div id='hue-wheel'>
+        <!-- <div id='hue-slider'></div> -->
+    </div>
 </div>
 <button class='settings-button' onclick='toggleShowSettings()' title='Show HoloViz settings'>
     <div id='settings-button-icon' class='icon-hamburger-menu'></div>
@@ -228,7 +334,8 @@
 
     // DOM
     const settingsButton = document.getElementById('settings-button-icon');
-    const settingsModal = document.getElementById('settings-modal');
+    const settingsModal = document.getElementById('settings-modal-wrapper');
+    const hueSelect = document.getElementById('hue-wheel');
 
     // display settings
     let display = {
@@ -255,7 +362,7 @@
         getAngle : () => {
             const dx = mouse.cartesianX - display.cx0;
             const dy = mouse.cartesianY - display.cy0;
-            return Math.atan(dy/dx);
+            return Math.atan2(dy,dx);
         },
         getP : () => {
             const dist = Math.sqrt(mouse.cartesianX*mouse.cartesianX + mouse.cartesianY*mouse.cartesianY);
@@ -310,6 +417,16 @@
         }
     }
 
+    function selectHue (e) {
+        const rect = e.target.getBoundingClientRect();
+        const x = (rect.width / 2) - (e.clientX - rect.left);
+        const y = (rect.height / 2) - (e.clientY - rect.top);
+        setHue(Math.atan2(y,x));
+    }
+    function setHue (h) {
+        CSSVars.set('--color-primary',`hsl(${(h * 180/Math.PI) - 90},100%,50%)`);
+    }
+
     
 
 
@@ -344,6 +461,7 @@
         log.addLine('');
         log.addLine(`[h] to toggle horizontal mirroring (${display.mirrorH?'ON':'OFF'})`);
         log.addLine(`[v] to toggle vertical mirroring (${display.mirrorV?'ON':'OFF'})`);
+        log.addLine('');
         log.updateElem();
 
 	}
@@ -365,6 +483,14 @@
     onResize();
     window.addEventListener(   'resize', onResize);
     window.addEventListener('mousemove', onMouse );
+    let hueDragging = false;
+    hueSelect.addEventListener('click', selectHue);
+    hueSelect.addEventListener('mousedown', e => {
+        hueDragging = true;
+        selectHue(e);
+    });
+    hueSelect.addEventListener('mousemove', e => { if (hueDragging) selectHue(e); });
+    hueSelect.addEventListener('mouseup', e => { hueDragging = false; });
 
     // keybinds
 	window.addEventListener('keydown', e => {
