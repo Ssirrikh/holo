@@ -10,8 +10,8 @@
             --color-highlight: #eeffef;
             --color-background : #000000;
 
-            --opacity-minor: 0.2;
-            --opacity-subminor: 0.1;
+            --opacity-minor: 0.4;
+            --opacity-subminor: 0.2;
 
             --v-avg: calc((1vmin + 1vmax) / 2);
             --square-button-width: max(2vmax,1.5rem);
@@ -91,9 +91,9 @@
             background-color: #000000bb;
         }
         #settings-modal {
-            border: 1px solid var(--color-primary);
+            /* border: 1px solid var(--color-glow); */
             position: absolute;
-            width: 50vw;
+            width: 30vw;
             height: 30vw;
             top: 50%;
             left: 50%;
@@ -166,40 +166,6 @@
             transform: rotate(90deg); /* rotates relative to source(?) element (what's even the terminology here?) */
         }
 
-        .arrow-left-right {
-            --t: 2px; /* line thickness */
-
-            background-color: var(--color-primary);
-            display: block;
-            position: absolute;
-            width: var(--square-button-width);
-            height: 2px;
-        }
-        .arrow-left-right::before, .arrow-left-right::after {
-            --s: calc(var(--square-button-width) / 2); /* side-length of arrowhead */
-
-            content: '';
-            border: var(--t) solid var(--color-primary);
-            display: inline-block;
-            width: var(--s);
-            height: var(--s);
-        }
-        .arrow-left-right::before {
-            border-top: none;
-            border-right: none;
-            transform: translate(-50%,-50%) rotate(45deg);
-        }
-        .arrow-left-right::after {
-            border-bottom: none;
-            border-left: none;
-            transform: translate(50%,-50%) rotate(45deg);
-        }
-
-        .button-mirror-h {
-            bottom: 2vw;
-            right: 8vw;
-        }
-
         .corner-brackets {
             --c: var(--color-primary); /* border color */
             --s: 0.5vmax; /* side-length of bracket */
@@ -261,6 +227,79 @@
 
         } */
 
+        .menu-row {
+            align-items: center;
+            gap: 1rem;
+        }
+        .menu-row-title {
+            border-bottom: 1px solid var(--color-primary);
+            padding: 0.25rem 1rem;
+            font-size: 1.5rem;
+        }
+        .menu-item-title {
+            border: 1px solid var(--color-primary);
+            padding: 0rem 0.25rem;
+            width: 10rem;
+            height: 1.5rem;
+            vertical-align: middle;
+        }
+        .menu-item-title::before {
+            content: '';
+            background-color: var(--color-primary);
+            display: inline-block;
+            position: relative;
+            width: 1rem;
+            height: 1px;
+            left: -1.25rem;
+            vertical-align: middle;
+        }
+        .menu-item-title::after {
+            content: '';
+            background-color: var(--color-primary);
+            width: 4px;
+            height: 1.5rem;
+        }
+        .menu-item-cap {
+            border-right: 1px solid var(--color-primary);
+            width: 4rem;
+            height: 3rem;
+        }
+        .menu-item-flex-space {
+            flex-grow: 1;
+        }
+        .menu-item-text {
+            /* border: 1px solid var(--color-primary); */
+            flex-grow: 1;
+            height: 1.5rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .menu-item-arrow-left, .menu-item-arrow-right {
+            cursor: pointer;
+            /* triangles use invisible border trick from https://css-tricks.com/snippets/css/css-triangle/ */
+            /* for equilateral triangle, height = 0.5*sqrt(3)*sidelen = 0.866*sidelen */
+            border-top: calc(0.866 * 0.5rem) solid transparent;
+            border-bottom: calc(0.866 * 0.5rem) solid transparent;
+            width: 0;
+            height: 0;
+        }
+        .menu-item-arrow-left {
+            border-right: 0.5rem solid var(--color-primary);
+        }
+        .menu-item-arrow-right {
+            border-left: 0.5rem solid var(--color-primary);
+        }
+
+        .menu-item-toggle {
+            /* border: 1px solid var(--color-primary); */
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 6em;
+        }
+        .menu-item-slider {}
+
 	</style>
 </head>
 <body>
@@ -304,21 +343,41 @@
     <div class='anchor' style='top:100%; left: 0%;'></div>
     <div class='anchor' style='top:100%; left:100%;'></div>
 </div>
+
 <div id='settings-modal-wrapper' class='settings-modal-overlay' style='visibility:hidden;'>
     <div id='settings-modal'>
-        <!-- <button class='button-mirror-h' title='Toggle horizontal mirroring'>
-            <div class='arrow-left-right'></div>
-        </button> -->
+        <div class='menu-row flex-row'><p class='menu-row-title'>Orientation & Alignment</p></div>
+        <div class='menu-row flex-row'>
+            <div class='menu-item-cap'></div>
+            <p class='menu-item-title'>Horizontal Mirroring</p>
+            <div class='menu-item-flex-space'></div>
+            <div class='menu-item-toggle'><div class='menu-item-arrow-left' onclick='toggleMirrorH()'></div><p id='mirror-h-state-text' class='menu-item-text'>OFF</p><div class='menu-item-arrow-right' onclick='toggleMirrorH()'></div></div>
+        </div>
+        <div class='menu-row flex-row'>
+            <div class='menu-item-cap'></div>
+            <p class='menu-item-title'>Vertical Mirroring</p>
+            <div class='menu-item-flex-space'></div>
+            <div class='menu-item-toggle'><div class='menu-item-arrow-left' onclick='toggleMirrorV()'></div><p id='mirror-v-state-text' class='menu-item-text'>OFF</p><div class='menu-item-arrow-right' onclick='toggleMirrorV()'></div></div>
+        </div>
+        <div class='menu-row flex-row'>
+            <div class='menu-item-cap'></div>
+            <p class='menu-item-title'>Fullscreen</p>
+            <div class='menu-item-flex-space'></div>
+            <div class='menu-item-toggle'><div class='menu-item-arrow-left' onclick='toggleFullscreen()'></div><p id='fullscreen-state-text' class='menu-item-text'>OFF</p><div class='menu-item-arrow-right' onclick='toggleFullscreen()'></div></div>
+        </div>
     </div>
     
     <div id='hue-wheel'>
         <!-- <div id='hue-slider'></div> -->
     </div>
 </div>
+
 <button class='settings-button' onclick='toggleShowSettings()' title='Show HoloViz settings'>
     <div id='settings-button-icon' class='icon-hamburger-menu'></div>
 </button>
 <div class='corner-brackets' onclick='toggleFullscreen()' title='Fullscreen'></div>
+
+
 
 <script type="text/javascript" src="script/log.js"></script>
 
@@ -335,6 +394,9 @@
     // DOM
     const settingsButton = document.getElementById('settings-button-icon');
     const settingsModal = document.getElementById('settings-modal-wrapper');
+    const textMirrorH = document.getElementById('mirror-h-state-text');
+    const textMirrorV = document.getElementById('mirror-v-state-text');
+    const textFullscreen = document.getElementById('fullscreen-state-text');
     const hueSelect = document.getElementById('hue-wheel');
 
     // display settings
@@ -380,14 +442,89 @@
 
 	//// INIT ////
 
+    const BTN_LEFT = 0;
+    const BTN_RIGHT = 1;
+    const BTN_UP = 2;
+    const BTN_DOWN = 3;
+    const BTN_SELECT = 4;
+
+    let menuController = {
+        menu : 0,
+        selection : 0,
+        states : {
+            'hue' : 0,
+            'brightness' : 0.5,
+            'mirror-h' : false,
+            'mirror-v' : false,
+            'fullscreen' : false
+        },
+        actions : [
+            // content menu
+            [
+                // global selection
+
+            ],
+            // settings menu
+            [
+                // hue
+                // brightness
+                // horizontal mirroring
+                // vertical mirroring
+                // fullscreen
+            ]
+        ],
+        tryAction : (action) => {
+            menuController[menuController.menu][menuController.selection][action]();
+            // switch (action) {
+            // case BTN_UP:
+            //     menuController.selection--;
+            //     if (menuController.selection < 0) menuController.selection = menuController.actions.length-1;
+            //     break;
+            // case BTN_DOWN:
+            //     menuController.selection++;
+            //     if (menuController.selection >= menuController.actions.length) menuController.selection = 0;
+            //     break;
+            // default:
+            //     menuController.actions[menuController.selection][action]();
+            // }
+        }
+    };
+
+    // class Menu {
+    //     constructor () {
+    //         this.selection = 0;
+    //         this.actions = [];
+    //     }
+    //     next () {
+    //         this.selection++;
+    //         if (this.selection >= this.actions.length) this.selection = 0;
+    //     }
+    //     prev () {
+    //         this.selection--;
+    //         if (this.selection < 0) this.selection = this.actions.length - 1;
+    //     }
+    //     addAction (menuItem,actionKey) {
+    //         //
+    //     }
+    //     tryAction (actionKey) {
+    //         if (actionKey < 0 || actionKey >= this.actions.length) return false;
+    //         this.actions[this.selection][actionKey]();
+    //         return true;
+    //     }
+    // }
+
+
+
     function toggleMirrorH () {
         display.mirrorH = !display.mirrorH;
+        textMirrorH.innerHTML = (display.mirrorH) ? 'ON' : 'OFF';
         const scaleX = (display.mirrorH) ? -1 : 1;
         const scaleY = (display.mirrorV) ? -1 : 1;
         document.body.style.transform = `scale(${scaleX},${scaleY})`;
     }
     function toggleMirrorV () {
         display.mirrorV = !display.mirrorV;
+        textMirrorV.innerHTML = (display.mirrorV) ? 'ON' : 'OFF';
         const scaleX = (display.mirrorH) ? -1 : 1;
         const scaleY = (display.mirrorV) ? -1 : 1;
         document.body.style.transform = `scale(${scaleX},${scaleY})`;
@@ -397,9 +534,11 @@
         if (display.isFullscreen && document.fullscreenElement) {
             document.exitFullscreen();
             display.isFullscreen = false;
+            textFullscreen.innerHTML = 'OFF';
         } else if (!display.isFullscreen && !document.fullscreenElement) {
             document.documentElement.requestFullscreen();
             display.isFullscreen = true;
+            textFullscreen.innerHTML = 'ON';
         }
     }
 
@@ -423,8 +562,9 @@
         const y = (rect.height / 2) - (e.clientY - rect.top);
         setHue(Math.atan2(y,x));
     }
-    function setHue (h) {
-        CSSVars.set('--color-primary',`hsl(${(h * 180/Math.PI) - 90},100%,50%)`);
+    function setHue (h = 0) {
+        CSSVars.set('--color-primary',`hsl(${(h * 180/Math.PI) - 90},100%,60%)`);
+        CSSVars.set('--color-glow'   ,`hsl(${(h * 180/Math.PI) - 90},100%,25%)`);
     }
 
     
